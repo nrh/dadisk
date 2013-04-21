@@ -13,7 +13,17 @@ import tempfile
 
 DEVNULL     = open('/dev/null', 'w')
 DIR         = "/Volumes/DADISK"
-HEADER      = """<html><head><base href="/~nrh/"><link rel="stylesheet" type="text/css" href="dadisk.css"></head><body><div id="outer">"""
+HEADER      = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="/~nrh/"><link rel="stylesheet" type="text/css" href="dadisk.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+</head><body>
+<script src="http://code.jquery.com/jquery.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<div class="container">"""
 FOOTER      = """</div></body></html>"""
 MEDIAEXT    = ('m4v','avi','wmv','mp4','mkv')
 SUBTITLES   = """
@@ -46,20 +56,20 @@ print "Content-type: text/html\n\n"
 
 def main():
 
-    dirl = form.getfirst('dir') or DIR
+    dirl = form.getfirst('dir') or None
     action = form.getfirst('action') or "list"
     mediafile = form.getfirst('file') or None
 
     if action == "toggle_play":
-        print toggle_play()
+        toggle_play()
         redirect(dirl, "list")
 
     if action == "toggle_subs":
-        print toggle_subs()
+        toggle_subs()
         redirect(dirl, "list")
 
     if action == "play":
-        print play_media(mediafile)
+        play_media(mediafile)
         redirect(dirl, "list")
 
     if action == "list":
@@ -78,7 +88,8 @@ def play_media(path):
         temp.flush()
         subprocess.call(['/bin/chmod','a+r',temp.name])
         subprocess.call(['/usr/bin/sudo','-u','nrh','/usr/bin/osascript',temp.name], stderr=DEVNULL, stdout=DEVNULL)
-    return """<div id="info">playing %s</div>""" % path
+    print """<div id="info">playing %s</div>""" % path
+    return
 
 def toggle_play():
     with tempfile.NamedTemporaryFile() as temp:
@@ -86,7 +97,7 @@ def toggle_play():
         temp.flush()
         subprocess.call(['/bin/chmod','a+r',temp.name])
         subprocess.call(['/usr/bin/sudo','-u','nrh','/usr/bin/osascript',temp.name], stderr=DEVNULL, stdout=DEVNULL)
-    return "toggled play"
+    return
 
 def toggle_subs():
     with tempfile.NamedTemporaryFile() as temp:
@@ -94,24 +105,56 @@ def toggle_subs():
         temp.flush()
         subprocess.call(['/bin/chmod','a+r',temp.name])
         subprocess.call(['/usr/bin/sudo','-u','nrh','/usr/bin/osascript',temp.name], stderr=DEVNULL, stdout=DEVNULL)
-    return "toggled subs"
+    return
+
+def human_readable_size(s):
+    for x in ['bytes','KB','MB','GB','TB']:
+        if s < 1024.0:
+            return "%3.1f %s" % (s, x)
+        s /= 1024.0
+    return "%3.1f" % s
 
 def markup_file(i,fp):
-    return """<div class="file">%s</div>""" % i
+    print """<tr><td>%s</td><td>%s</td></tr>""" % (i, human_readable_size(os.path.getsize(fp)))
 
 def markup_dir(i,fp):
-    return """<div class="dir"><a href="dadisk.cgi?dir=%s">%s</a></div>""" % (urllib.quote_plus(fp, safe=''), i)
+    print """<tr><td colspan="2"><a href="dadisk.cgi?dir=%s">%s</a></td></tr>""" % (urllib.quote_plus(fp, safe=''), i)
 
 def markup_playlink(i,fp,d):
-    return """<div class="playlink"><a href="dadisk.cgi?dir=%s&action=play&file=%s">%s</a>""" % (urllib.quote_plus(d, safe=''), urllib.quote_plus(fp, safe=''), i)
+    print """<tr><td><a href="dadisk.cgi?dir=%s&action=play&file=%s">%s</a></td><td>%s</td></tr>""" % (urllib.quote_plus(d, safe=''), urllib.quote_plus(fp, safe=''), i, human_readable_size(os.path.getsize(fp)))
+
+def breadcrumb(d):
+    if not d:
+        d = '&lt;root&gt;'
+
+    parts = d.split('/')
+    def gen_url(s):
+        if s == '&lt;root&gt;':
+            return "dadisk.cgi"
+        return "dadisk.cgi?dir=%s" % urllib.quote_plus(s, safe='')
+
+    print """<div><ul class="breadcrumb">"""
+    for i in range(len(parts) - 1):
+        print """<li><a href="%s">%s</a> <span class="divider">/</span></li>""" % (gen_url(parts[i]), parts[i])
+    print """<li class="active">%s</li>""" % parts[-1]
+    print """<li class="pull-right"><a class="btn" href="dadisk.cgi?dir=%s&action=toggle_play">pause</a></li>""" % urllib.quote_plus(d, safe='')
+
+    print """<li class="pull-right"><a class="btn" href="dadisk.cgi?dir=%s&action=toggle_subs">toggle&nbsp;subs</a></li>""" % urllib.quote_plus(d, safe='')
+    print """</ul></div>"""
+
 
 def list_dir(d):
     print HEADER
-    print """<div id="playpause"><a href="dadisk.cgi?dir=%s&action=toggle_play">play/pause</a></div>""" % (urllib.quote_plus(d, safe=''))
-    print """<div id="togglesubs"><a href="dadisk.cgi?dir=%s&action=toggle_subs">toggle subtitles</a></div>""" % (urllib.quote_plus(d, safe=''))
+    breadcrumb(d)
+    if not d:
+        realdir = DIR
+    else:
+        realdir = os.sep.join((DIR, d))
 
-    for thing in os.listdir(d):
-        path = os.sep.join((d, thing))
+    print """<table class="table table-striped table-bordered">"""
+
+    for thing in os.listdir(realdir):
+        path = os.sep.join((realdir, thing))
 
         if thing == "":
             continue
@@ -122,13 +165,13 @@ def list_dir(d):
             continue
 
         if os.path.isdir(path):
-            print markup_dir(thing, path)
+            markup_dir(path, path)
         elif os.path.isfile(path):
             ext = path.rsplit('.')[-1:]
             if ext[0] in MEDIAEXT:
-                print markup_playlink(thing, path, d)
+                markup_playlink(thing, path, d)
             else:
-                print markup_file(thing, path)
+                markup_file(thing, path)
 
     print FOOTER
 
