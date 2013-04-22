@@ -27,12 +27,18 @@ class Request(object):
 
     def breadcrumb(self):
         # class=active, href=dadisk.cgi?..., target=foo
-        items = [{'target': '<root>', 'href': "dadisk.cgi"}]
-        parts = self.dir.split('/')
-        for i in range(len(parts) - 1):
-            items.append({'target': parts[i], 'href': "dadisk.cgi?dir=%s" % self.safe_dir })
+        items = []
+        parts = self.dir.split('/')[1:]
+        if len(parts) > 1:
+            items.append({'target': '<root>', 'href': "dadisk.cgi"})
+        else:
+            items.append({'class': 'active', 'target': '<root>'})
 
-        items.append({'target': parts[-1], 'class': 'active'})
+        if len(parts) > 1:
+            for i in range(len(parts) - 1):
+                items.append({'target': parts[i], 'href': "dadisk.cgi?dir=%s" % self.safe_dir })
+
+            items.append({'target': parts[-1], 'class': 'active'})
         return items
 
     def rows(self):
