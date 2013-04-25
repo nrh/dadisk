@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
 import os
-import stat
 import re
 import cgi
 import urllib
@@ -14,7 +12,8 @@ import pystache
 LOGINUSER   = 'nrh'
 DEVNULL     = open('/dev/null', 'w')
 DIR         = "/Volumes/DADISK"
-MEDIAEXT    = ('m4v','avi','wmv','mp4','mkv')
+MEDIAEXT    = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
+
 
 class Request(object):
     def __init__(self, form=None):
@@ -23,7 +22,7 @@ class Request(object):
         self.safe_dir = urllib.quote_plus(self.dir, safe='')
         self.action = form.getfirst('action') or "list"
         self.file = form.getfirst('file') or None
-        self.fsdir = os.sep.join((DIR,self.dir))
+        self.fsdir = os.sep.join((DIR, self.dir))
 
     def breadcrumb(self):
         # class=active, href=dadisk.cgi?..., target=foo
@@ -36,14 +35,15 @@ class Request(object):
 
         if len(parts) > 1:
             for i in range(len(parts) - 1):
-                items.append({'target': parts[i], 'href': "dadisk.cgi?dir=%s" % self.safe_dir })
+                items.append({'target': parts[i],
+                              'href': "dadisk.cgi?dir=%s" % self.safe_dir})
 
             items.append({'target': parts[-1], 'class': 'active'})
         return items
 
     def rows(self):
         def human_readable_size(s):
-            for x in ['bytes','KB','MB','GB','TB']:
+            for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
                 if s < 1024.0:
                     return "%3.1f %s" % (s, x)
                 s /= 1024.0
@@ -61,13 +61,17 @@ class Request(object):
                 continue
 
             if os.path.isdir(path):
-                safe_target = urllib.quote_plus(os.sep.join((self.dir, thing)), safe='')
-                rows.append({'colspan': 2, 'href': "dadisk.cgi?dir=%s" % safe_target, 'target': thing})
+                safe_target = urllib.quote_plus(os.sep.join((self.dir, thing)),
+                                                safe='')
+                rows.append({'colspan': 2,
+                             'href': "dadisk.cgi?dir=%s" % safe_target,
+                             'target': thing})
             elif os.path.isfile(path):
                 ext = path.rsplit('.')[-1:]
                 size = human_readable_size(os.path.getsize(path))
                 if ext[0] in MEDIAEXT:
-                    href = "dadisk.cgi?dir=%s&action=play&target=%s" % (self.safe_dir, os.sep.join((self.dir, thing)))
+                    href = ("dadisk.cgi?dir=%s&action=play&target=%s" %
+                            (self.safe_dir, os.sep.join((self.dir, thing))))
                     rows.append({'href': href, 'target': thing, 'size': size})
                 else:
                     rows.append({'target': thing, 'size': size})
@@ -102,38 +106,49 @@ def main():
     print renderer.render_name('dadisk.html', request)
     return
 
+
 def redirect(target, action):
     if action == "list":
         print HEADER
-        print """<meta http-equiv="refresh" content="0;url='dadisk.cgi?dir=%s&action=list'">""" % (urllib.quote_plus(target, safe=''))
+        print ('<meta http-equiv="refresh" '
+               'content="0;url=\'dadisk.cgi?dir=%s&action=list\'">' %
+               (urllib.quote_plus(target, safe='')))
         print FOOTER
     return
+
 
 def play_media(path):
     with tempfile.NamedTemporaryFile(delete=False) as temp:
         temp.write("""tell application "VLC" to open "%s" fullscreen""" % path)
         temp.flush()
-        subprocess.call(['/bin/chmod','a+r',temp.name])
-        subprocess.call(['/usr/bin/sudo','-u',LOGINUSER,'/usr/bin/osascript',temp.name], stderr=DEVNULL, stdout=DEVNULL)
+        subprocess.call(['/bin/chmod', 'a+r', temp.name])
+        subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
+                         '/usr/bin/osascript', temp.name],
+                        stderr=DEVNULL, stdout=DEVNULL)
     print """<div id="info">playing %s</div>""" % path
     return
+
 
 def toggle_play():
     with tempfile.NamedTemporaryFile() as temp:
         temp.write("""tell application "VLC" to play""")
         temp.flush()
-        subprocess.call(['/bin/chmod','a+r',temp.name])
-        subprocess.call(['/usr/bin/sudo','-u',LOGINUSER,'/usr/bin/osascript',temp.name], stderr=DEVNULL, stdout=DEVNULL)
+        subprocess.call(['/bin/chmod', 'a+r', temp.name])
+        subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
+                         '/usr/bin/osascript', temp.name],
+                        stderr=DEVNULL, stdout=DEVNULL)
     return
+
 
 def toggle_subs():
     with tempfile.NamedTemporaryFile() as temp:
         temp.write(SUBTITLES)
         temp.flush()
-        subprocess.call(['/bin/chmod','a+r',temp.name])
-        subprocess.call(['/usr/bin/sudo','-u',LOGINUSER,'/usr/bin/osascript',temp.name], stderr=DEVNULL, stdout=DEVNULL)
+        subprocess.call(['/bin/chmod', 'a+r', temp.name])
+        subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
+                         '/usr/bin/osascript', temp.name],
+                        stderr=DEVNULL, stdout=DEVNULL)
     return
 
 if __name__ == "__main__":
     main()
-
