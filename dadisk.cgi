@@ -88,32 +88,23 @@ def main():
 
     print "Content-type: text/html\n\n"
     request = Request()
+    renderer = pystache.Renderer()
 
     if request.action == "toggle_play":
         toggle_play()
-        redirect(dirl, "list")
+        print renderer.render_name('redirect.html', request)
         return
 
     if request.action == "toggle_subs":
         toggle_subs()
-        redirect(dirl, "list")
+        print renderer.render_name('redirect.html', request)
         return
 
     if request.action == "play":
-        play_media(mediafile)
+        play_media(request.file)
+        print renderer.render_name('redirect.html', request)
 
-    renderer = pystache.Renderer()
     print renderer.render_name('dadisk.html', request)
-    return
-
-
-def redirect(target, action):
-    if action == "list":
-        print HEADER
-        print ('<meta http-equiv="refresh" '
-               'content="0;url=\'dadisk.cgi?dir=%s&action=list\'">' %
-               (urllib.quote_plus(target, safe='')))
-        print FOOTER
     return
 
 
