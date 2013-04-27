@@ -112,11 +112,10 @@ def play_media(path):
     with tempfile.NamedTemporaryFile(delete=False) as temp:
         temp.write("""tell application "VLC" to open "%s" fullscreen""" % path)
         temp.flush()
-        subprocess.call(['/bin/chmod', 'a+r', temp.name])
+        os.fchown(temp, 0444)
         subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
                          '/usr/bin/osascript', temp.name],
                         stderr=DEVNULL, stdout=DEVNULL)
-    print """<div id="info">playing %s</div>""" % path
     return
 
 
@@ -124,7 +123,7 @@ def toggle_play():
     with tempfile.NamedTemporaryFile() as temp:
         temp.write("""tell application "VLC" to play""")
         temp.flush()
-        subprocess.call(['/bin/chmod', 'a+r', temp.name])
+        os.fchown(temp, 0444)
         subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
                          '/usr/bin/osascript', temp.name],
                         stderr=DEVNULL, stdout=DEVNULL)
