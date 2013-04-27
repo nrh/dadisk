@@ -25,18 +25,18 @@ class Request(object):
         self.fsdir = os.sep.join((DIR, self.dir))
 
     def breadcrumb(self):
-        # class=active, href=dadisk.cgi?..., target=foo
+        # class=active, href=?..., target=foo
         items = []
         parts = self.dir.split('/')[1:]
         if len(parts) > 1:
-            items.append({'target': '<root>', 'href': "dadisk.cgi"})
+            items.append({'target': '<root>', 'href': ""})
         else:
             items.append({'class': 'active', 'target': '<root>'})
 
         if len(parts) > 1:
             for i in range(len(parts) - 1):
                 items.append({'target': parts[i],
-                              'href': "dadisk.cgi?dir=%s" % self.safe_dir})
+                              'href': "?dir=%s" % self.safe_dir})
 
             items.append({'target': parts[-1], 'class': 'active'})
         return items
@@ -48,7 +48,7 @@ class Request(object):
                     return "%3.1f %s" % (s, x)
                 s /= 1024.0
             return "%3.1f" % s
-        # colspan=2, href=dadisk.cgi?..., target=foo, size=bar
+        # colspan=2, href=?..., target=foo, size=bar
         rows = []
         for thing in os.listdir(self.fsdir):
             path = os.sep.join((self.fsdir, thing))
@@ -64,13 +64,13 @@ class Request(object):
                 safe_target = urllib.quote_plus(os.sep.join((self.dir, thing)),
                                                 safe='')
                 rows.append({'colspan': 2,
-                             'href': "dadisk.cgi?dir=%s" % safe_target,
+                             'href': "?dir=%s" % safe_target,
                              'target': thing})
             elif os.path.isfile(path):
                 ext = path.rsplit('.')[-1:]
                 size = human_readable_size(os.path.getsize(path))
                 if ext[0] in MEDIAEXT:
-                    href = ("dadisk.cgi?dir=%s&action=play&target=%s" %
+                    href = ("?dir=%s&action=play&target=%s" %
                             (self.safe_dir, os.sep.join((self.dir, thing))))
                     rows.append({'href': href, 'target': thing, 'size': size})
                 else:
@@ -78,10 +78,10 @@ class Request(object):
         return rows
 
     def playurl(self):
-        return """dadisk.cgi?dir=%s&action=toggle_play""" % self.safe_dir
+        return """?dir=%s&action=toggle_play""" % self.safe_dir
 
     def subsurl(self):
-        return """dadisk.cgi?dir=%s&action=toggle_subs""" % self.safe_dir
+        return """?dir=%s&action=toggle_subs""" % self.safe_dir
 
 
 def main():
@@ -110,7 +110,8 @@ def main():
 
 def play_media(path):
     with tempfile.NamedTemporaryFile(delete=False) as temp:
-        temp.write("""tell application "VLC" to open "%s" fullscreen""" % path)
+        renderer = pystache.Renderer()
+        temp.write(renderer.render_name('play_media.applescript', {'file': path}))
         temp.flush()
         os.fchown(temp, 0444)
         subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
@@ -120,23 +121,17 @@ def play_media(path):
 
 
 def toggle_play():
-    with tempfile.NamedTemporaryFile() as temp:
-        temp.write("""tell application "VLC" to play""")
-        temp.flush()
-        os.fchown(temp, 0444)
+    with open('toggle_play.applescript') as f:
         subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
-                         '/usr/bin/osascript', temp.name],
+                         '/usr/bin/osascript', f.name],
                         stderr=DEVNULL, stdout=DEVNULL)
     return
 
 
 def toggle_subs():
-    with tempfile.NamedTemporaryFile() as temp:
-        temp.write(SUBTITLES)
-        temp.flush()
-        subprocess.call(['/bin/chmod', 'a+r', temp.name])
+    with open('toggle_subs.applescript') as f:
         subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
-                         '/usr/bin/osascript', temp.name],
+                         '/usr/bin/osascript', f.name],
                         stderr=DEVNULL, stdout=DEVNULL)
     return
 
