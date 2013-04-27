@@ -63,8 +63,9 @@ class Request(object):
             if os.path.isdir(path):
                 safe_target = urllib.quote_plus(os.sep.join((self.dir, thing)),
                                                 safe='')
-                rows.append({'colspan': 2,
-                             'href': "?dir=%s" % safe_target,
+                rows.append({'isdir': 1,
+                             'colspan': 2,
+                             'safe_target': safe_target,
                              'target': thing})
             elif os.path.isfile(path):
                 ext = path.rsplit('.')[-1:]
@@ -72,16 +73,15 @@ class Request(object):
                 if ext[0] in MEDIAEXT:
                     href = ("?dir=%s&action=play&target=%s" %
                             (self.safe_dir, os.sep.join((self.dir, thing))))
-                    rows.append({'href': href, 'target': thing, 'size': size})
+                    rows.append({'ismedia': 1,
+                                 'href': href,
+                                 'target': thing,
+                                 'size': size})
                 else:
-                    rows.append({'target': thing, 'size': size})
+                    rows.append({'isother': 1,
+                                 'target': thing,
+                                 'size': size})
         return rows
-
-    def playurl(self):
-        return """?dir=%s&action=toggle_play""" % self.safe_dir
-
-    def subsurl(self):
-        return """?dir=%s&action=toggle_subs""" % self.safe_dir
 
 
 def main():
@@ -92,17 +92,21 @@ def main():
 
     if request.action == "toggle_play":
         toggle_play()
-        print renderer.render_name('redirect.html', request)
+        print request
+        print "toggled"
         return
 
     if request.action == "toggle_subs":
         toggle_subs()
-        print renderer.render_name('redirect.html', request)
+        print request
+        print "toggled"
         return
 
     if request.action == "play":
         play_media(request.file)
-        print renderer.render_name('redirect.html', request)
+        print request
+        print "played"
+        return
 
     print renderer.render_name('dadisk.html', request)
     return

@@ -13,7 +13,7 @@
     <ul class="breadcrumb">
       {{#breadcrumb}}
       <li{{#class}} class="{{class}}"{{/class}}>
-      {{#href}}<a href="{{href}}">{{/href}}{{target}}{{#href}}</a>{{/href}}
+      {{#target}}<a href="?dir={{target}}">{{/target}}{{name}}{{#target}}</a>{{/target}}
       <span class="divider">/</span></li>
       {{/breadcrumb}}
       <li class="pull-right"><form><input onclick="toggle_play();" type="button" class="btn" value="play/pause"></form></li>
@@ -26,9 +26,21 @@
     <table class="table table-striped table-bordered">
       {{#rows}}
       <tr>
-        <td{{#colspan}} colspan={{colspan}}{{/colspan}}>
+        {{#isdir}}
+        <td colspan="2">
+          <a href="?dir={{target}}">{{target}}</a>
+        </td>
+        {{/isdir}}
+        {{#isother}}
+        <td>
+          {{target}}
+        </td>
+        {{/isother}}
+        {{#ismedia}}
+        <td>
           <a href="javascript:void(0)" onclick="play_file('{{target}}');">{{target}}</a>
         </td>
+        {{/ismedia}}
         {{#size}}
         <td>{{size}}</td>
         {{/size}}
