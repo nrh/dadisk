@@ -82,8 +82,8 @@ class Request(object):
                 continue
 
             if os.path.isdir(path):
-                safe_target = urllib.quote_plus(os.sep.join((self.realdir(), thing)),
-                                                safe='/')
+                target = os.sep.join((self.realdir(), thing)).lstrip('/').rstrip('/')
+                safe_target = urllib.quote_plus(target, safe='/')
                 rows.append({'isdir': 1,
                              'colspan': 2,
                              'target': safe_target,
