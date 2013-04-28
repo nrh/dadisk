@@ -8,6 +8,7 @@ import urllib
 import subprocess
 import tempfile
 import pystache
+from pprint import pformat
 
 LOGINUSER   = 'nrh'
 DEVNULL     = open('/dev/null', 'w')
@@ -17,28 +18,48 @@ MEDIAEXT    = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
 
 class Request(object):
     def __init__(self, form=None):
-        form = cgi.FieldStorage()
-        self.dir = form.getfirst('dir') or '/'
+        self.form = cgi.FieldStorage()
+        self.dir = self.form.getfirst('dir') or '/'
         self.safe_dir = urllib.quote_plus(self.dir, safe='')
-        self.action = form.getfirst('action') or "list"
-        self.file = form.getfirst('file') or None
-        self.fsdir = os.sep.join((DIR, self.dir))
+        self.action = self.form.getfirst('action') or "list"
+        self.file = self.form.getfirst('file') or None
+        self.fsdir = os.sep.join((DIR, self.dir)).replace('//','/').rstrip('/')
+        self.parts = self.dir.replace('//','/').rstrip('/').split('/')
+
+    def realdir(self):
+        if self.dir == '/':
+            return ''
+        else:
+            return self.dir
+
+    def displaydir(self):
+        if self.dir == '/':
+            return '<root>'
+        return self.dir
+
+    def rootactive(self):
+        if self.dir == '/':
+            return False
+        else:
+            return 'active'
+
+    def pprint(self):
+        return pformat(vars(self))
+
+    def rootname(self):
+        return '<root>'
+
+    def roottarget(self):
+        return '/~%s' % LOGINUSER
 
     def breadcrumb(self):
-        # class=active, href=?..., target=foo
         items = []
-        parts = self.dir.split('/')[1:]
-        if len(parts) > 1:
-            items.append({'target': '<root>', 'href': ""})
-        else:
-            items.append({'class': 'active', 'target': '<root>'})
 
-        if len(parts) > 1:
-            for i in range(len(parts) - 1):
-                items.append({'target': parts[i],
-                              'href': "?dir=%s" % self.safe_dir})
+        for i in range(len(self.parts) - 1):
+            items.append({'name': self.parts[i],
+                          'target': "?dir=%s" % self.safe_dir})
 
-            items.append({'target': parts[-1], 'class': 'active'})
+        items.append({'class': 'active', 'name': self.parts[-1]})
         return items
 
     def rows(self):
@@ -48,7 +69,7 @@ class Request(object):
                     return "%3.1f %s" % (s, x)
                 s /= 1024.0
             return "%3.1f" % s
-        # colspan=2, href=?..., target=foo, size=bar
+
         rows = []
         for thing in os.listdir(self.fsdir):
             path = os.sep.join((self.fsdir, thing))
@@ -61,25 +82,24 @@ class Request(object):
                 continue
 
             if os.path.isdir(path):
-                safe_target = urllib.quote_plus(os.sep.join((self.dir, thing)),
-                                                safe='')
+                safe_target = urllib.quote_plus(os.sep.join((self.realdir(), thing)),
+                                                safe='/')
                 rows.append({'isdir': 1,
                              'colspan': 2,
-                             'safe_target': safe_target,
-                             'target': thing})
+                             'target': safe_target,
+                             'name': thing})
             elif os.path.isfile(path):
                 ext = path.rsplit('.')[-1:]
                 size = human_readable_size(os.path.getsize(path))
                 if ext[0] in MEDIAEXT:
-                    href = ("?dir=%s&action=play&target=%s" %
-                            (self.safe_dir, os.sep.join((self.dir, thing))))
+                    target = os.sep.join((self.dir, thing))
                     rows.append({'ismedia': 1,
-                                 'href': href,
-                                 'target': thing,
+                                 'target': target,
+                                 'name': thing,
                                  'size': size})
                 else:
                     rows.append({'isother': 1,
-                                 'target': thing,
+                                 'name': thing,
                                  'size': size})
         return rows
 
@@ -92,20 +112,18 @@ def main():
 
     if request.action == "toggle_play":
         toggle_play()
-        print request
-        print "toggled"
+        print request.pprint()
         return
 
     if request.action == "toggle_subs":
         toggle_subs()
-        print request
-        print "toggled"
+        print request.pprint()
         return
 
     if request.action == "play":
-        play_media(request.file)
-        print request
-        print "played"
+        target = os.sep.join((DIR, request.form.getfirst('target')))
+        play_media(target)
+        print request.pprint()
         return
 
     print renderer.render_name('dadisk.html', request)
@@ -113,11 +131,11 @@ def main():
 
 
 def play_media(path):
-    with tempfile.NamedTemporaryFile(delete=False) as temp:
+    with tempfile.NamedTemporaryFile() as temp:
         renderer = pystache.Renderer()
         temp.write(renderer.render_name('play_media.applescript', {'file': path}))
         temp.flush()
-        os.fchown(temp, 0444)
+        os.chmod(temp.name, 0444)
         subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
                          '/usr/bin/osascript', temp.name],
                         stderr=DEVNULL, stdout=DEVNULL)

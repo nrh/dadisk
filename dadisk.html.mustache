@@ -11,16 +11,16 @@
 <div class="container">
   <div>
     <ul class="breadcrumb">
+      <li{{#rootactive}} class="{{rootactive}}"{{/rootactive}}>
+      {{#rootactive}}<a href="{{roottarget}}">{{/rootactive}}{{rootname}}{{#rootactive}}</a>{{/rootactive}}
       {{#breadcrumb}}
+      <span class="divider">/</span></li>
       <li{{#class}} class="{{class}}"{{/class}}>
       {{#target}}<a href="?dir={{target}}">{{/target}}{{name}}{{#target}}</a>{{/target}}
-      <span class="divider">/</span></li>
       {{/breadcrumb}}
       <li class="pull-right"><form><input onclick="toggle_play();" type="button" class="btn" value="play/pause"></form></li>
       <li class="pull-right"><form><input onclick="toggle_subs();" type="button" class="btn" value="toggle&nbsp;subs"></form></li>
     </ul>
-  </div>
-  <div id="status">
   </div>
   <div>
     <table class="table table-striped table-bordered">
@@ -28,17 +28,17 @@
       <tr>
         {{#isdir}}
         <td colspan="2">
-          <a href="?dir={{target}}">{{target}}</a>
+          <a href="?dir={{target}}">{{name}}</a>
         </td>
         {{/isdir}}
         {{#isother}}
         <td>
-          {{target}}
+          {{name}}
         </td>
         {{/isother}}
         {{#ismedia}}
         <td>
-          <a href="javascript:void(0)" onclick="play_file('{{target}}');">{{target}}</a>
+          <a href="javascript:void(0)" onclick="play_file('{{target}}');">{{name}}</a>
         </td>
         {{/ismedia}}
         {{#size}}
@@ -47,6 +47,11 @@
       </tr>
       {{/rows}}
     </table>
+  </div>
+  <div id="status">
+    <pre>
+{{pprint}}
+    </pre>
   </div>
 </div>
 </body>
