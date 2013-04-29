@@ -1,0 +1,2 @@
+_www ALL=(nrh) NOPASSWD: /usr/bin/osascript /tmp/tmp[a-zA-Z0-9]*
+

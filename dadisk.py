@@ -144,17 +144,25 @@ def play_media(path):
 
 def toggle_play():
     with open('toggle_play.applescript') as f:
-        subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
-                         '/usr/bin/osascript', f.name],
-                        stderr=DEVNULL, stdout=DEVNULL)
+        with tempfile.NamedTemporaryFile() as temp:
+            temp.write(f.read())
+            temp.flush()
+            os.chmod(temp.name, 0444)
+            subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
+                             '/usr/bin/osascript', temp.name],
+                             stderr=DEVNULL, stdout=DEVNULL)
     return
 
 
 def toggle_subs():
     with open('toggle_subs.applescript') as f:
-        subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
-                         '/usr/bin/osascript', f.name],
-                        stderr=DEVNULL, stdout=DEVNULL)
+        with tempfile.NamedTemporaryFile() as temp:
+            temp.write(f.read())
+            temp.flush()
+            os.chmod(temp.name, 0444)
+            subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
+                             '/usr/bin/osascript', temp.name],
+                             stderr=DEVNULL, stdout=DEVNULL)
     return
 
 if __name__ == "__main__":
