@@ -10,11 +10,12 @@ import tempfile
 import pystache
 from pprint import pformat
 
-LOGINUSER   = 'nrh'
-DEVNULL     = open('/dev/null', 'w')
-DIR         = "/Volumes/DADISK"
-MEDIAEXT    = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
-ROOTURI     = '/~%s/' % LOGINUSER
+LOGINUSER = 'nrh'
+DEVNULL = open('/dev/null', 'w')
+DIR = "/Volumes/DADISK"
+MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
+SKIP = ('Desktop DB', 'Desktop DF')
+ROOTURI = '/~%s/' % LOGINUSER
 
 
 class Request(object):
@@ -24,8 +25,9 @@ class Request(object):
         self.safe_dir = urllib.quote_plus(self.dir, safe='/')
         self.action = self.form.getfirst('action') or "list"
         self.file = self.form.getfirst('file') or None
-        self.fsdir = os.sep.join((DIR, self.dir)).replace('//','/').rstrip('/')
-        self.parts = self.dir.replace('//','/').rstrip('/').split('/')
+        self.fsdir = os.sep.join((DIR,
+                                 self.dir)).replace('//', '/').rstrip('/')
+        self.parts = self.dir.replace('//', '/').rstrip('/').split('/')
         self.debug = self.form.getfirst('debug') or False
         self.roottarget = ROOTURI
         self.rootname = '<root>'
@@ -84,13 +86,17 @@ class Request(object):
                 continue
 
             if os.path.isdir(path):
-                target = os.sep.join((self.realdir(), thing)).lstrip('/').rstrip('/')
+                target = os.sep.join((self.realdir(),
+                                      thing)).lstrip('/').rstrip('/')
                 safe_target = urllib.quote_plus(target, safe='/')
                 rows.append({'isdir': 1,
                              'colspan': 2,
                              'target': safe_target,
                              'name': thing})
             elif os.path.isfile(path):
+                if thing in SKIP:
+                    continue
+
                 ext = path.rsplit('.')[-1:]
                 size = human_readable_size(os.path.getsize(path))
                 if ext[0] in MEDIAEXT:
@@ -135,7 +141,8 @@ def main():
 def play_media(path):
     with tempfile.NamedTemporaryFile() as temp:
         renderer = pystache.Renderer()
-        temp.write(renderer.render_name('play_media.applescript', {'file': path}))
+        temp.write(renderer.render_name('play_media.applescript',
+                   {'file': path}))
         temp.flush()
         os.chmod(temp.name, 0444)
         subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
@@ -152,7 +159,7 @@ def toggle_play():
             os.chmod(temp.name, 0444)
             subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
                              '/usr/bin/osascript', temp.name],
-                             stderr=DEVNULL, stdout=DEVNULL)
+                            stderr=DEVNULL, stdout=DEVNULL)
     return
 
 
@@ -164,7 +171,7 @@ def toggle_subs():
             os.chmod(temp.name, 0444)
             subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
                              '/usr/bin/osascript', temp.name],
-                             stderr=DEVNULL, stdout=DEVNULL)
+                            stderr=DEVNULL, stdout=DEVNULL)
     return
 
 if __name__ == "__main__":
