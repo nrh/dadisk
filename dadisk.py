@@ -20,7 +20,7 @@ class Request(object):
     def __init__(self, form=None):
         self.form = cgi.FieldStorage()
         self.dir = self.form.getfirst('dir') or '/'
-        self.safe_dir = urllib.quote_plus(self.dir, safe='')
+        self.safe_dir = urllib.quote_plus(self.dir, safe='/')
         self.action = self.form.getfirst('action') or "list"
         self.file = self.form.getfirst('file') or None
         self.fsdir = os.sep.join((DIR, self.dir)).replace('//','/').rstrip('/')
@@ -43,6 +43,10 @@ class Request(object):
         else:
             return 'active'
 
+    def safe_prev_dir(self, numparts=0):
+        return urllib.quote_plus(os.sep.join(self.parts[0:numparts]),
+                                 safe='/')
+
     def pprint(self):
         return pformat(vars(self))
 
@@ -57,7 +61,7 @@ class Request(object):
 
         for i in range(len(self.parts) - 1):
             items.append({'name': self.parts[i],
-                          'target': "?dir=%s" % self.safe_dir})
+                          'target': self.safe_prev_dir(i + 1)})
 
         items.append({'class': 'active', 'name': self.parts[-1]})
         return items
