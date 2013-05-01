@@ -12,11 +12,11 @@
   <div>
     <ul class="breadcrumb">
       <li{{#rootactive}} class="{{rootactive}}"{{/rootactive}}>
-      {{#rootactive}}<a href="{{roottarget}}">{{/rootactive}}{{rootname}}{{#rootactive}}</a>{{/rootactive}}
+      {{#rootactive}}<a href="{{roottarget}}{{#debug}}/?debug=1{{/debug}}">{{/rootactive}}{{rootname}}{{#rootactive}}</a>{{/rootactive}}
       {{#breadcrumb}}
       <span class="divider">/</span></li>
       <li{{#class}} class="{{class}}"{{/class}}>
-      {{#target}}<a href="?dir={{target}}">{{/target}}{{name}}{{#target}}</a>{{/target}}
+      {{#target}}<a href="?dir={{target}}{{#debug}}&debug=1{{/debug}}">{{/target}}{{name}}{{#target}}</a>{{/target}}
       {{/breadcrumb}}
       <li class="pull-right"><form><input onclick="toggle_play();" type="button" class="btn btn-mini" value="play/pause"></form></li>
       <li class="pull-right"><form><input onclick="toggle_subs();" type="button" class="btn btn-mini" value="toggle&nbsp;subs"></form></li>
@@ -28,7 +28,7 @@
       <tr>
         {{#isdir}}
         <td colspan="2">
-          <a href="?dir={{target}}">{{name}}</a>
+          <a href="?dir={{target}}{{#debug}}&debug=1{{/debug}}">{{name}}</a>
         </td>
         {{/isdir}}
         {{#isother}}
@@ -48,11 +48,13 @@
       {{/rows}}
     </table>
   </div>
+  {{#debug}}
   <div id="status">
     <pre>
 {{pprint}}
     </pre>
   </div>
+  {{/debug}}
 </div>
 </body>
 </html>

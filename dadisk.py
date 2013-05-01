@@ -25,6 +25,7 @@ class Request(object):
         self.file = self.form.getfirst('file') or None
         self.fsdir = os.sep.join((DIR, self.dir)).replace('//','/').rstrip('/')
         self.parts = self.dir.replace('//','/').rstrip('/').split('/')
+        self.debug = self.form.getfirst('debug') or False
 
     def realdir(self):
         if self.dir == '/':
