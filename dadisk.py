@@ -55,7 +55,7 @@ class Request(object):
         return '<root>'
 
     def roottarget(self):
-        return '/~%s' % LOGINUSER
+        return '/~%s/' % LOGINUSER
 
     def breadcrumb(self):
         items = []
