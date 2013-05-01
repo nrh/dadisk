@@ -14,6 +14,7 @@ LOGINUSER   = 'nrh'
 DEVNULL     = open('/dev/null', 'w')
 DIR         = "/Volumes/DADISK"
 MEDIAEXT    = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
+ROOTURI     = '/~%s/' % LOGINUSER
 
 
 class Request(object):
@@ -26,6 +27,8 @@ class Request(object):
         self.fsdir = os.sep.join((DIR, self.dir)).replace('//','/').rstrip('/')
         self.parts = self.dir.replace('//','/').rstrip('/').split('/')
         self.debug = self.form.getfirst('debug') or False
+        self.roottarget = ROOTURI
+        self.rootname = '<root>'
 
     def realdir(self):
         if self.dir == '/':
@@ -50,12 +53,6 @@ class Request(object):
 
     def pprint(self):
         return pformat(vars(self))
-
-    def rootname(self):
-        return '<root>'
-
-    def roottarget(self):
-        return '/~%s/' % LOGINUSER
 
     def breadcrumb(self):
         items = []
