@@ -1,19 +1,24 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
-import telnetlib
 import re
-
-PORT = 4212
-PASS = 'dickbutt'
+import telnetlib
 
 
 class VLCController(object):
-    def __init__(self):
-        self.conn = telnetlib.Telnet('127.0.0.1', PORT)
-        self.conn.read_until('ord:')
-        self.conn.write(PASS + "\r\n")
-        self.conn.read_until('> ')
+    def __init__(self, password=None, host='127.0.0.1', port=4212):
+        self.password = password
+        self.host = host
+        self.port = port
+        self.conn = None
+        return
+
+    def connect(self):
+        if not self.conn:
+            self.conn = telnetlib.Telnet(self.host, self.port)
+            self.conn.read_until('ord:')
+            self.conn.write(self.password + "\r\n")
+            self.conn.read_until('> ')
         return
 
     def pause(self):
@@ -68,9 +73,11 @@ class VLCController(object):
         for t in tracks.split('\r\n'):
             match = re.match('^\| ([-]?\d+) - (.*)', t)
             if match:
-                tset.append(match.groups())
-                if match.group(2)[-1] == '*':
+                name = match.group(2)
+                if name[-1] == '*':
                     tselected = match.group(1)
+                    name = name[0:-1].rstrip()
+                tset.append((match.group(1), name))
 
         return (tset, tselected)
 

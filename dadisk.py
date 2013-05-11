@@ -1,13 +1,12 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
-import os
-import re
 import cgi
-import urllib
-import subprocess
-import tempfile
+import os
 import pystache
+import re
+import urllib
+import vlccontroller
 from pprint import pformat
 
 LOGINUSER = 'nrh'
@@ -16,10 +15,11 @@ DIR = "/Media"
 MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
 SKIP = ('Desktop DB', 'Desktop DF')
 ROOTURI = '/~%s/' % LOGINUSER
+VLCPASS = 'dickbutt'
 
 
 class Request(object):
-    def __init__(self, form=None):
+    def __init__(self, form=None, vc=None):
         self.form = cgi.FieldStorage()
         self.dir = self.form.getfirst('dir') or '/'
         self.safe_dir = urllib.quote_plus(self.dir, safe='/')
@@ -31,6 +31,7 @@ class Request(object):
         self.debug = self.form.getfirst('debug') or False
         self.roottarget = ROOTURI
         self.rootname = '<root>'
+        self.vc = vc
 
     def realdir(self):
         if self.dir == '/':
@@ -52,6 +53,16 @@ class Request(object):
     def safe_prev_dir(self, numparts=0):
         return urllib.quote_plus(os.sep.join(self.parts[0:numparts]),
                                  safe='/')
+
+    def subtitles(self):
+        set = []
+        foo = self.vc.get_subtitle_tracks()
+        for tuple in foo[0]:
+            selected = True if foo[1] == tuple[1] else False
+            set.append({"name": tuple[0], "index": tuple[1],
+                        "selected": selected})
+
+        return set
 
     def pprint(self):
         return pformat(vars(self))
@@ -115,63 +126,27 @@ class Request(object):
 def main():
 
     print "Content-type: text/html\n\n"
-    request = Request()
+    vc = vlccontroller.VLCController(password=VLCPASS)
+    vc.connect()
+    request = Request(vc=vc)
     renderer = pystache.Renderer()
 
     if request.action == "toggle_play":
-        toggle_play()
-        print request.pprint()
+        vc.pause()
         return
 
     if request.action == "toggle_subs":
-        toggle_subs()
-        print request.pprint()
+        vc.set_subtitle_track(-1)
         return
 
     if request.action == "play":
         target = os.sep.join((DIR, request.form.getfirst('target')))
-        play_media(target)
-        print request.pprint()
+        vc.clear()
+        vc.add(target)
+        vc.play()
         return
 
     print renderer.render_name('dadisk.html', request)
-    return
-
-
-def play_media(path):
-    with tempfile.NamedTemporaryFile() as temp:
-        renderer = pystache.Renderer()
-        temp.write(renderer.render_name('play_media.applescript',
-                   {'file': path}))
-        temp.flush()
-        os.chmod(temp.name, 0444)
-        subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
-                         '/usr/bin/osascript', temp.name],
-                        stderr=DEVNULL, stdout=DEVNULL)
-    return
-
-
-def toggle_play():
-    with open('toggle_play.applescript') as f:
-        with tempfile.NamedTemporaryFile() as temp:
-            temp.write(f.read())
-            temp.flush()
-            os.chmod(temp.name, 0444)
-            subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
-                             '/usr/bin/osascript', temp.name],
-                            stderr=DEVNULL, stdout=DEVNULL)
-    return
-
-
-def toggle_subs():
-    with open('toggle_subs.applescript') as f:
-        with tempfile.NamedTemporaryFile() as temp:
-            temp.write(f.read())
-            temp.flush()
-            os.chmod(temp.name, 0444)
-            subprocess.call(['/usr/bin/sudo', '-u', LOGINUSER,
-                             '/usr/bin/osascript', temp.name],
-                            stderr=DEVNULL, stdout=DEVNULL)
     return
 
 if __name__ == "__main__":
