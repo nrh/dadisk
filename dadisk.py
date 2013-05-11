@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
 import os
@@ -12,7 +12,7 @@ from pprint import pformat
 
 LOGINUSER = 'nrh'
 DEVNULL = open('/dev/null', 'w')
-DIR = "/Volumes/DADISK"
+DIR = "/Media"
 MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
 SKIP = ('Desktop DB', 'Desktop DF')
 ROOTURI = '/~%s/' % LOGINUSER
