@@ -1,2 +1,3 @@
 .localized
 *.swp
+*.pyc
