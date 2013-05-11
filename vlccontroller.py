@@ -1,12 +1,12 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
-import socket
 import telnetlib
 import re
 
-PORT=4212
-PASS='dickbutt'
+PORT = 4212
+PASS = 'dickbutt'
+
 
 class VLCController(object):
     def __init__(self):
@@ -26,6 +26,21 @@ class VLCController(object):
         t = self.conn.read_until('> ')
         t = t[0:t.rindex("\r")]
         return True if int(t) == 1 else False
+
+    def add(self, item):
+        self.conn.write("add %s\r\n" % item)
+        self.conn.read_until('> ')
+        return
+
+    def play(self):
+        self.conn.write("play\r\n")
+        self.conn.read_until('> ')
+        return
+
+    def clear(self):
+        self.conn.write("clear\r\n")
+        self.conn.read_until('> ')
+        return
 
     def time(self):
         self.conn.write("get_time\r\n")
@@ -57,10 +72,9 @@ class VLCController(object):
                 if match.group(2)[-1] == '*':
                     tselected = match.group(1)
 
-        return (tset,tselected)
+        return (tset, tselected)
 
     def set_subtitle_track(self, sel):
         self.conn.write("strack %s\r\n" % sel)
         self.conn.read_until('> ')
         return
-
