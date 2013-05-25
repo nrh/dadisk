@@ -39,22 +39,25 @@
       {{#rows}}
       <tr>
         {{#isdir}}
-        <td colspan=2>
+        <td>
           <a href="?dir={{target}}{{#debug}}&debug=1{{/debug}}">{{name}}</a>
         </td>
+        <td></td>
         {{#ts}}<td class="preish">{{ts}}</td>{{/ts}}
         {{/isdir}}
         {{#isother}}
-        <td colspan=3>
+        <td>
           {{name}}
         </td>
+        <td class="preish">{{size}}</td>
+        <td class="preish">{{ts}}</td>
         {{/isother}}
         {{#ismedia}}
         <td>
           <a href="javascript:void(0)" onclick="play_file('{{target}}');">{{name}}</a>
         </td>
-        {{#size}}<td class="preish">{{size}}</td>{{/size}}
-        {{#ts}}<td class="preish">{{ts}}</td>{{/ts}}
+        <td class="preish">{{size}}</td>
+        <td class="preish">{{ts}}</td>
         {{/ismedia}}
       </tr>
       {{/rows}}
@@ -67,6 +70,11 @@
     </pre>
   </div>
   {{/debug}}
+  {{#nowplaying}}
+  <div id="nowplaying">
+    {{nowplaying.name}} ({{nowplaying.length}}): {{nowplaying.time}}
+  </div>
+  {{/nowplaying}}
   <div id="links">
     <a href="http://dickbutt.local:9091/transmission/web/">transmission</a>
   </div>

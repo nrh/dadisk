@@ -51,19 +51,27 @@ class VLCController(object):
         self.conn.write("get_time\r\n")
         t = self.conn.read_until('> ')
         t = t[0:t.rindex("\r")]
-        return int(t)
+        try:
+            t = int(t)
+        except ValueError:
+            return None
+        return t
 
     def length(self):
         self.conn.write("get_length\r\n")
         t = self.conn.read_until('> ')
         t = t[0:t.rindex("\r")]
-        return int(t)
+        try:
+            t = int(t)
+        except ValueError:
+            return None
+        return t
 
     def title(self):
         self.conn.write("get_title\r\n")
         t = self.conn.read_until('> ')
         t = t[0:t.rindex("\r")]
-        return t
+        return t if t != '' else None
 
     def get_subtitle_tracks(self):
         self.conn.write("strack\r\n")

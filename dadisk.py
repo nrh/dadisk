@@ -6,7 +6,7 @@ import os
 import pystache
 import re
 import urllib
-import time
+import human_readable
 from pprint import pformat
 
 import vlccontroller
@@ -17,7 +17,7 @@ DIR = "/Media"
 MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
 SKIP = ('Desktop DB', 'Desktop DF')
 ROOTURI = '/~%s/' % LOGINUSER
-VLCPASS = 'dickbutt'
+VLCPASS = 'admin'
 
 
 class Request(object):
@@ -37,22 +37,13 @@ class Request(object):
         self.vc = vc
 
     def nextsort_date(self):
-        if self.sortby == 'd':
-            return 'D'
-        else:
-            return 'd'
+        return 'D' if self.sortby == 'd' else 'd'
 
     def nextsort_size(self):
-        if self.sortby == 's':
-            return 'S'
-        else:
-            return 's'
+        return 'S' if self.sortby == 's' else 's'
 
     def nextsort_name(self):
-        if self.sortby == 'n':
-            return 'N'
-        else:
-            return 'n'
+        return 'N' if self.sortby == 'n' else 'n'
 
     def realdir(self):
         if self.dir == '/':
@@ -99,43 +90,22 @@ class Request(object):
         return items
 
     def rows(self):
-        def human_readable_size(s):
-            for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
-                if s < 1024.0:
-                    return "%3.1f %s" % (s, x)
-                s /= 1024.0
-            return "%3.1f" % s
 
-        def human_readable_time(t):
-            """emulate gnu coreutils 'ls -l' time format"""
-            if time.time() - t > 15724800:
-                return time.strftime("%b %e  %Y", time.localtime(t))
-            else:
-                return time.strftime("%b %e %H:%M", time.localtime(t))
-
-        rows = []
         items = []
-        if self.sortby == 'n':
+        if self.sortby.lower() == 'n':
             items = sorted(os.listdir(self.fsdir), key=str.lower)
-        elif self.sortby == 'N':
-            items = reversed(sorted(os.listdir(self.fsdir), key=str.lower))
-        elif self.sortby == 'd':
+        elif self.sortby.lower() == 'd':
             items = sorted(os.listdir(self.fsdir),
                            key=lambda f: os.stat(
                                os.sep.join((self.fsdir, f))).st_mtime)
-        elif self.sortby == 'D':
-            items = reversed(sorted(os.listdir(self.fsdir),
-                             key=lambda f: os.stat(
-                                 os.sep.join((self.fsdir, f))).st_mtime))
-        elif self.sortby == 's':
+        elif self.sortby.lower() == 's':
             items = sorted(os.listdir(self.fsdir),
                            key=lambda f: os.stat(
                                os.sep.join((self.fsdir, f))).st_size)
-        elif self.sortby == 'S':
-            items = reversed(sorted(os.listdir(self.fsdir),
-                             key=lambda f: os.stat(
-                                 os.sep.join((self.fsdir, f))).st_size))
+        if self.sortby.isupper():
+            items = reversed(items)
 
+        rows = []
         for thing in items:
             path = os.sep.join((self.fsdir, thing))
 
@@ -150,7 +120,7 @@ class Request(object):
                 target = os.sep.join((self.realdir(),
                                       thing)).lstrip('/').rstrip('/')
                 safe_target = urllib.quote_plus(target, safe='/')
-                ts = human_readable_time(os.stat(path)[9])
+                ts = human_readable.date(os.stat(path)[9])
                 rows.append({'isdir': 1,
                              'colspan': 2,
                              'target': safe_target,
@@ -161,8 +131,8 @@ class Request(object):
                     continue
 
                 ext = path.rsplit('.')[-1:]
-                size = human_readable_size(os.path.getsize(path))
-                ts = human_readable_time(os.stat(path)[9])
+                size = human_readable.size(os.path.getsize(path))
+                ts = human_readable.date(os.stat(path)[9])
 
                 if ext[0] in MEDIAEXT:
                     target = os.sep.join((self.dir, thing))
@@ -174,27 +144,35 @@ class Request(object):
                 else:
                     rows.append({'isother': 1,
                                  'name': thing,
+                                 'ts': ts,
                                  'size': size})
         return rows
 
+    def nowplaying(self):
+        title = self.vc.title()
+        if title:
+            return {'name': title,
+                    'length': human_readable.timestamp(self.vc.length()),
+                    'time': human_readable.timestamp(self.vc.time())}
+        return None
+
 
 def main():
-
     print "Content-type: text/html\n\n"
     vc = vlccontroller.VLCController(password=VLCPASS)
     vc.connect()
     request = Request(vc=vc)
     renderer = pystache.Renderer()
 
-    if request.action == "toggle_play":
+    if request.action == 'toggle_play':
         vc.pause()
         return
 
-    if request.action == "toggle_subs":
+    if request.action == 'toggle_subs':
         vc.set_subtitle_track(-1)
         return
 
-    if request.action == "play":
+    if request.action == 'play':
         target = os.sep.join((DIR, request.form.getfirst('target')))
         vc.clear()
         vc.add(target)
@@ -204,5 +182,5 @@ def main():
     print renderer.render_name('dadisk.html', request)
     return
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
