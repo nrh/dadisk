@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="dadisk.css" rel="stylesheet" media="screen">
 <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 </head>
 <body>
@@ -23,16 +24,28 @@
     </ul>
   </div>
   <div>
-    <table class="table table-striped table-bordered">
+    <table class="table table-striped table-bordered table-condensed">
+      <tr>
+        <td>
+          <small><a href="?dir={{dir}}&sort={{nextsort_name}}">Name</a></small>
+        </td>
+        <td width="80px">
+          <small><a href="?dir={{dir}}&sort={{nextsort_size}}">Size</a></small>
+        </td>
+        <td width="100px">
+          <small><a href="?dir={{dir}}&sort={{nextsort_date}}">Date</a></small>
+        </td>
+      </tr>
       {{#rows}}
       <tr>
         {{#isdir}}
-        <td colspan="2">
+        <td colspan=2>
           <a href="?dir={{target}}{{#debug}}&debug=1{{/debug}}">{{name}}</a>
         </td>
+        {{#ts}}<td class="preish">{{ts}}</td>{{/ts}}
         {{/isdir}}
         {{#isother}}
-        <td>
+        <td colspan=3>
           {{name}}
         </td>
         {{/isother}}
@@ -40,10 +53,9 @@
         <td>
           <a href="javascript:void(0)" onclick="play_file('{{target}}');">{{name}}</a>
         </td>
+        {{#size}}<td class="preish">{{size}}</td>{{/size}}
+        {{#ts}}<td class="preish">{{ts}}</td>{{/ts}}
         {{/ismedia}}
-        {{#size}}
-        <td>{{size}}</td>
-        {{/size}}
       </tr>
       {{/rows}}
     </table>

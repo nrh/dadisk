@@ -6,8 +6,10 @@ import os
 import pystache
 import re
 import urllib
-import vlccontroller
+import time
 from pprint import pformat
+
+import vlccontroller
 
 LOGINUSER = 'nrh'
 DEVNULL = open('/dev/null', 'w')
@@ -31,7 +33,26 @@ class Request(object):
         self.debug = self.form.getfirst('debug') or False
         self.roottarget = ROOTURI
         self.rootname = '<root>'
+        self.sortby = self.form.getfirst('sort') or 'n'
         self.vc = vc
+
+    def nextsort_date(self):
+        if self.sortby == 'd':
+            return 'D'
+        else:
+            return 'd'
+
+    def nextsort_size(self):
+        if self.sortby == 's':
+            return 'S'
+        else:
+            return 's'
+
+    def nextsort_name(self):
+        if self.sortby == 'n':
+            return 'N'
+        else:
+            return 'n'
 
     def realdir(self):
         if self.dir == '/':
@@ -85,8 +106,37 @@ class Request(object):
                 s /= 1024.0
             return "%3.1f" % s
 
+        def human_readable_time(t):
+            """emulate gnu coreutils 'ls -l' time format"""
+            if time.time() - t > 15724800:
+                return time.strftime("%b %e  %Y", time.localtime(t))
+            else:
+                return time.strftime("%b %e %H:%M", time.localtime(t))
+
         rows = []
-        for thing in os.listdir(self.fsdir):
+        items = []
+        if self.sortby == 'n':
+            items = sorted(os.listdir(self.fsdir), key=str.lower)
+        elif self.sortby == 'N':
+            items = reversed(sorted(os.listdir(self.fsdir), key=str.lower))
+        elif self.sortby == 'd':
+            items = sorted(os.listdir(self.fsdir),
+                           key=lambda f: os.stat(
+                               os.sep.join((self.fsdir, f))).st_mtime)
+        elif self.sortby == 'D':
+            items = reversed(sorted(os.listdir(self.fsdir),
+                             key=lambda f: os.stat(
+                                 os.sep.join((self.fsdir, f))).st_mtime))
+        elif self.sortby == 's':
+            items = sorted(os.listdir(self.fsdir),
+                           key=lambda f: os.stat(
+                               os.sep.join((self.fsdir, f))).st_size)
+        elif self.sortby == 'S':
+            items = reversed(sorted(os.listdir(self.fsdir),
+                             key=lambda f: os.stat(
+                                 os.sep.join((self.fsdir, f))).st_size))
+
+        for thing in items:
             path = os.sep.join((self.fsdir, thing))
 
             if thing == "":
@@ -100,9 +150,11 @@ class Request(object):
                 target = os.sep.join((self.realdir(),
                                       thing)).lstrip('/').rstrip('/')
                 safe_target = urllib.quote_plus(target, safe='/')
+                ts = human_readable_time(os.stat(path)[9])
                 rows.append({'isdir': 1,
                              'colspan': 2,
                              'target': safe_target,
+                             'ts': ts,
                              'name': thing})
             elif os.path.isfile(path):
                 if thing in SKIP:
@@ -110,11 +162,14 @@ class Request(object):
 
                 ext = path.rsplit('.')[-1:]
                 size = human_readable_size(os.path.getsize(path))
+                ts = human_readable_time(os.stat(path)[9])
+
                 if ext[0] in MEDIAEXT:
                     target = os.sep.join((self.dir, thing))
                     rows.append({'ismedia': 1,
                                  'target': target,
                                  'name': thing,
+                                 'ts': ts,
                                  'size': size})
                 else:
                     rows.append({'isother': 1,
