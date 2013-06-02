@@ -14,7 +14,7 @@ import vlccontroller
 LOGINUSER = 'nrh'
 DEVNULL = open('/dev/null', 'w')
 DIR = "/Media"
-MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv')
+MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv', 'flv')
 SKIP = ('Desktop DB', 'Desktop DF')
 ROOTURI = '/~%s/' % LOGINUSER
 VLCPASS = 'admin'
