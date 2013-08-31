@@ -35,6 +35,7 @@ class Request(object):
         self.rootname = '<root>'
         self.sortby = self.form.getfirst('sort') or 'n'
         self.vc = vc
+        self.title = '/' if self.dir == '/' else '/ ' + self.dir
 
     def nextsort_date(self):
         return 'D' if self.sortby == 'd' else 'd'
