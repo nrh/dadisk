@@ -38,13 +38,13 @@ class Request(object):
         self.title = '/' if self.dir == '/' else '/ ' + self.dir
 
     def nextsort_date(self):
-        return 'D' if self.sortby == 'd' else 'd'
+        return 'D' if self.sortby == 'd' else 'D'
 
     def nextsort_size(self):
-        return 'S' if self.sortby == 's' else 's'
+        return 'S' if self.sortby == 's' else 'S'
 
     def nextsort_name(self):
-        return 'N' if self.sortby == 'n' else 'n'
+        return 'N' if self.sortby == 'n' else 'N'
 
     def realdir(self):
         if self.dir == '/':
