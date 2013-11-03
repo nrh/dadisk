@@ -13,7 +13,7 @@ import vlccontroller
 
 LOGINUSER = 'nrh'
 DEVNULL = open('/dev/null', 'w')
-DIR = "/Media"
+DIR = "/Volumes/Tyme Machine/Media"
 MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv', 'flv')
 SKIP = ('Desktop DB', 'Desktop DF')
 ROOTURI = '/~%s/' % LOGINUSER
@@ -181,7 +181,7 @@ def main():
         return
 
     if request.action == 'play':
-        target = os.sep.join((DIR, request.form.getfirst('target')))
+        target = os.sep.join((DIR, urllib.unquote_plus(request.form.getfirst('target'))))
         vc.clear()
         vc.add(target)
         vc.play()
