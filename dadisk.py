@@ -143,8 +143,9 @@ class Request(object):
 
                 if ext[0] in MEDIAEXT:
                     target = os.sep.join((self.dir, thing))
+                    safe_target = urllib.quote_plus(target, safe='/')
                     rows.append({'ismedia': 1,
-                                 'target': target,
+                                 'target': safe_target,
                                  'name': thing,
                                  'ts': ts,
                                  'size': size})
