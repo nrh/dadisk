@@ -33,17 +33,23 @@ class Request(object):
         self.debug = self.form.getfirst('debug') or False
         self.roottarget = ROOTURI
         self.rootname = '<root>'
-        self.sortby = self.form.getfirst('sort') or 'n'
+        self.sortby = self.form.getfirst('sort') or 'D'
         self.vc = vc
         self.title = '/' if self.dir == '/' else '/ ' + self.dir
 
     def nextsort_date(self):
+        if self.sortby == 'D':
+            return 'd'
         return 'D' if self.sortby == 'd' else 'D'
 
     def nextsort_size(self):
+        if self.sortby == 'S':
+            return 's'
         return 'S' if self.sortby == 's' else 'S'
 
     def nextsort_name(self):
+        if self.sortby == 'N':
+            return 'n'
         return 'N' if self.sortby == 'n' else 'N'
 
     def realdir(self):
