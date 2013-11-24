@@ -1,19 +1,20 @@
-#!/usr/local/bin/python
+#!/usr/local/bin/python3
 # -*- coding: utf-8 -*-
 
 import cgi
 import os
 import pystache
 import re
-import urllib
+import urllib.parse
 import human_readable
+import sys
 from pprint import pformat
 
 import vlccontroller
 
 LOGINUSER = 'nrh'
 DEVNULL = open('/dev/null', 'w')
-DIR = "/Volumes/Tyme Machine/Media"
+DIR = '/Volumes/Tyme Machine/Media'
 MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv', 'flv')
 SKIP = ('Desktop DB', 'Desktop DF')
 ROOTURI = '/~%s/' % LOGINUSER
@@ -24,7 +25,7 @@ class Request(object):
     def __init__(self, form=None, vc=None):
         self.form = cgi.FieldStorage()
         self.dir = self.form.getfirst('dir') or '/'
-        self.safe_dir = urllib.quote_plus(self.dir, safe='/')
+        self.safe_dir = urllib.parse.quote_plus(self.dir, safe='/')
         self.action = self.form.getfirst('action') or "list"
         self.file = self.form.getfirst('file') or None
         self.fsdir = os.sep.join((DIR,
@@ -70,7 +71,7 @@ class Request(object):
             return 'active'
 
     def safe_prev_dir(self, numparts=0):
-        return urllib.quote_plus(os.sep.join(self.parts[0:numparts]),
+        return urllib.parse.quote_plus(os.sep.join(self.parts[0:numparts]),
                                  safe='/')
 
     def subtitles(self):
@@ -126,7 +127,7 @@ class Request(object):
             if os.path.isdir(path):
                 target = os.sep.join((self.realdir(),
                                       thing)).lstrip('/').rstrip('/')
-                safe_target = urllib.quote_plus(target, safe='/')
+                safe_target = urllib.parse.quote_plus(target, safe='/')
                 ts = human_readable.date(os.stat(path)[9])
                 rows.append({'isdir': 1,
                              'colspan': 2,
@@ -143,7 +144,7 @@ class Request(object):
 
                 if ext[0] in MEDIAEXT:
                     target = os.sep.join((self.dir, thing))
-                    safe_target = urllib.quote_plus(target, safe='/')
+                    safe_target = urllib.parse.quote_plus(target, safe='/')
                     rows.append({'ismedia': 1,
                                  'target': safe_target,
                                  'name': thing,
@@ -166,11 +167,13 @@ class Request(object):
 
 
 def main():
-    print "Content-type: text/html\n\n"
+
+    sys.stdout.buffer.write(b'Content-type: text/html; charset=utf-8\n\n')
     vc = vlccontroller.VLCController(password=VLCPASS)
     vc.connect()
     request = Request(vc=vc)
-    renderer = pystache.Renderer()
+    renderer = pystache.Renderer() #file_encoding='utf-8',
+#            string_encoding='utf-8', decode_errors='xmlcharrefreplace')
 
     if request.action == 'toggle_play':
         vc.pause()
@@ -181,13 +184,13 @@ def main():
         return
 
     if request.action == 'play':
-        target = os.sep.join((DIR, urllib.unquote_plus(request.form.getfirst('target'))))
+        target = os.sep.join((DIR, urllib.parse.unquote_plus(request.form.getfirst('target'))))
         vc.clear()
         vc.add(target)
         vc.play()
         return
 
-    print renderer.render_name('dadisk.html', request)
+    sys.stdout.buffer.write(renderer.render_name('dadisk.html', request).encode('utf-8'))
     return
 
 if __name__ == '__main__':
