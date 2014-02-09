@@ -14,7 +14,7 @@ import vlccontroller
 
 LOGINUSER = 'nrh'
 DEVNULL = open('/dev/null', 'w')
-DIR = '/Volumes/Tyme Machine/Media'
+DIR = '/Volumes/Media'
 MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv', 'flv')
 SKIP = ('Desktop DB', 'Desktop DF')
 ROOTURI = '/~%s/' % LOGINUSER
@@ -128,7 +128,7 @@ class Request(object):
                 target = os.sep.join((self.realdir(),
                                       thing)).lstrip('/').rstrip('/')
                 safe_target = urllib.parse.quote_plus(target, safe='/')
-                ts = human_readable.date(os.stat(path)[9])
+                ts = human_readable.date(os.stat(path)[8])
                 rows.append({'isdir': 1,
                              'colspan': 2,
                              'target': safe_target,
@@ -140,7 +140,7 @@ class Request(object):
 
                 ext = path.rsplit('.')[-1:]
                 size = human_readable.size(os.path.getsize(path))
-                ts = human_readable.date(os.stat(path)[9])
+                ts = human_readable.date(os.stat(path)[8])
 
                 if ext[0] in MEDIAEXT:
                     target = os.sep.join((self.dir, thing))
