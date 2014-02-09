@@ -172,8 +172,7 @@ def main():
     vc = vlccontroller.VLCController(password=VLCPASS)
     vc.connect()
     request = Request(vc=vc)
-    renderer = pystache.Renderer() #file_encoding='utf-8',
-#            string_encoding='utf-8', decode_errors='xmlcharrefreplace')
+    renderer = pystache.Renderer()
 
     if request.action == 'toggle_play':
         vc.pause()
