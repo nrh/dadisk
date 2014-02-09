@@ -36,6 +36,11 @@ class VLCController(object):
         t = t[0:t.rindex(b'\r')]
         return True if int(t) == 1 else False
 
+    def enqueue(self, item):
+        self.conn.write(('enqueue %s\r\n' % item).encode('utf-8'))
+        self.conn.read_until(b'> ', READ_TIMEOUT)
+        return
+
     def add(self, item):
         self.conn.write(('add %s\r\n' % item).encode('utf-8'))
         self.conn.read_until(b'> ', READ_TIMEOUT)

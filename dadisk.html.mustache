@@ -55,7 +55,8 @@
         {{/isother}}
         {{#ismedia}}
         <td>
-          <a href="javascript:void(0)" onclick="play_file('{{target}}');">{{name}}</a>
+          <div class="target"> <a href="javascript:void(0)" onclick="play_file('{{target}}');">{{name}}</a></div>
+          <div class="control"><small>[ <a href="javascript:void(0)" onclick="enqueue_file('{{target}}');">queue</a> ]</small></div>
         </td>
         <td class="preish">{{size}}</td>
         <td class="preish">{{ts}}</td>
@@ -64,13 +65,11 @@
       {{/rows}}
     </table>
   </div>
-  {{#debug}}
-  <div id="status">
+  <div id="status" {{^debug}}style="display:none"{{/debug}}>
     <pre>
 {{pprint}}
     </pre>
   </div>
-  {{/debug}}
   {{#nowplaying}}
   <div id="nowplaying">
     {{nowplaying.name}} ({{nowplaying.length}}): {{nowplaying.time}}

@@ -189,6 +189,11 @@ def main():
         vc.play()
         return
 
+    if request.action == 'enqueue':
+        target = os.sep.join((DIR, urllib.parse.unquote_plus(request.form.getfirst('target'))))
+        vc.enqueue(target)
+        return
+
     sys.stdout.buffer.write(renderer.render_name('dadisk.html', request).encode('utf-8'))
     return
 

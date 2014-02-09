@@ -13,4 +13,5 @@ function do_post(action, target)
 function toggle_subs()     { do_post('toggle_subs', null); }
 function toggle_play()     { do_post('toggle_play', null); }
 function play_file(target) { do_post('play', target) }
+function enqueue_file(target) { do_post('enqueue', target) }
 
