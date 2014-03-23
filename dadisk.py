@@ -15,7 +15,7 @@ import vlccontroller
 LOGINUSER = 'nrh'
 DEVNULL = open('/dev/null', 'w')
 DIR = '/Volumes/Media'
-MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv', 'flv')
+MEDIAEXT = ('m4v', 'avi', 'wmv', 'mp4', 'mkv', 'flv', 'mov', 'asf', 'mpg')
 SKIP = ('Desktop DB', 'Desktop DF')
 ROOTURI = '/~%s/' % LOGINUSER
 VLCPASS = 'admin'
@@ -142,7 +142,7 @@ class Request(object):
                 size = human_readable.size(os.path.getsize(path))
                 ts = human_readable.date(os.stat(path)[8])
 
-                if ext[0] in MEDIAEXT:
+                if ext[0].lower() in MEDIAEXT:
                     target = os.sep.join((self.dir, thing))
                     safe_target = urllib.parse.quote_plus(target, safe='/')
                     rows.append({'ismedia': 1,
